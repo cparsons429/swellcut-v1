@@ -181,7 +181,7 @@ var neurogram = {};
     updateSelected();
   });
 
-  $("#evolve_arrow").click(function() {
+  $(".Evolve Arrow").click(function() {
     var len = selectionList.length;
     if (len === 0) {
       return;

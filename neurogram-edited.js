@@ -32,214 +32,250 @@ for the JavaScript code in this page.
 
 var neurogram = {};
 
-(function(global) {
-  "use strict";
+var numImages = 12;
+var thumbSize = 270;
+var maxSelected = 3;  // we can only evolve max of 3 genomes
 
-  var numImages = 12;
-  var borderWidth = 1;
-  var thumbSize = document.getElementById('sm0').width - 2 * borderWidth;
-  var maxSelected = 3;  // we can only evolve max of 3 genomes
+var genome = [];  // array of genomes
+var thumb = [];  // array of images
 
-  var genome = [];  // array of genomes
-  var thumb = [];  // array of images
+var currSelected = 0;
+var selectionList = [];
 
-  var currSelected = 0;
-  var lastSelected = -1;
-  var selectionList = [];
+function setCanvasSize(i) {
+  // set canvas width and height equal to the width of the canvas element container
+  var width = $("#ce0").width();
+  $("#canvas" + String(i)).width(width);
+  $("#canvas" + String(i)).height(width);
+}
 
-  var canvases = [];
-  var ctxs = [];
-
+function setCanvasSizes() {
+  // set all canvas widths and heights equal to the width of the canvas element container
   var i;
   for (i = 0; i < numImages; i++) {
-    canvas = document.getElementById('canvas' + String(i));
-    canvases.push(canvas);
-    ctxs.push(canvas.getContext('2d'));
+    setCanvasSize(i);
+  }
+}
+
+setCanvasSizes();
+
+var canvas;
+var canvases = [];
+var ctxs = [];
+
+var i;
+for (i = 0; i < numImages; i++) {
+  canvas = document.getElementById('canvas' + String(i));
+  canvases.push(canvas);
+  ctxs.push(canvas.getContext('2d'));
+}
+
+// initialize NEAT library (set number of inputs and outputs)
+N.init({nInput: 3, nOutput: 3});
+
+function initAll() {
+  // initializes random genomes at the beginning
+  var i, j;
+  genome = [];
+  thumb = [];
+
+  for (i = 0; i < numImages; i++) {
+    genome.push(null);
+    thumb.push(null);
+  }
+}
+
+function initGenome() {
+  N.randomizeRenderMode();
+  var i, j;
+
+  for (i = 0; i < numImages; i++) {
+    genome[i] = new N.Genome();
   }
 
-  // initialize NEAT library (set number of inputs and outputs)
-  N.init({nInput: 3, nOutput: 3});
-
-  function initAll() {
-    // initializes random genomes at the beginning
-    var i, j;
-    genome = [];
-    thumb = [];
-    lastSelected = -1;
-
-    for (i = 0; i < numImages; i++) {
-      genome.push(null);
-      thumb.push(null);
-    }
-  }
-
-  function initGenome() {
-    N.randomizeRenderMode();
-    var i, j;
-
-    for (i = 0; i < numImages; i++) {
-      genome[i] = new N.Genome();
-    }
-
-    for (i = 0; i < 8; i++) {
-      for (j = 0; j < numImages; j++) {
-        if (Math.random() < 0.5) {
-          genome[j].addRandomNode();
-        }
-        if (Math.random() < 0.5) {
-          genome[j].addRandomConnection();
-        }
+  for (i = 0; i < 8; i++) {
+    for (j = 0; j < numImages; j++) {
+      if (Math.random() < 0.5) {
+        genome[j].addRandomNode();
+      }
+      if (Math.random() < 0.5) {
+        genome[j].addRandomConnection();
       }
     }
   }
+}
 
-  function initThumb() {
-    // initializes all the images (must be run after genome array is populated)
-    var i;
-    for (i = 0; i < numImages; i++) {
+function initThumb() {
+  // initializes all the images (must be run after genome array is populated)
+  var i;
+  for (i = 0; i < numImages; i++) {
+    genome[i].roundWeights();
+    thumb[i] = NetArt.genGenomeImage(genome[i], thumbSize, thumbSize);
+  }
+}
+
+function maskThumb(i) {
+  ctxs[i].fillStyle="rgba(255, 255, 255, 0.7)";
+  ctxs[i].fillRect(0, 0, thumbSize, thumbSize);
+}
+
+function drawThumb(i) {
+  ctxs[i].putImageData(thumb[i].getCanvasImage(ctxs[i]), 0, 0);
+}
+
+function drawAllThumb() {
+  var i;
+
+  for (i = 0; i < numImages; i++) {
+    ctxs[i].clearRect(0, 0, thumbSize, thumbSize);
+    drawThumb(i);
+  }
+}
+
+function darkenThumb(i) {
+  // darkens a newly picked thumb, switches checkmark for x mark
+  $("#ov" + String(i)).css("opacity", "0.2");
+  $("#pd" + String(i)).css("display", "none");
+  $("#ud" + String(i)).css("display", "block");
+}
+
+function lightenThumb(i) {
+  // lightens a newly unpicked thumb, switches x mark for checkmark
+  $("#ov" + String(i)).css("opacity", "0");
+  $("#pd" + String(i)).css("display", "block");
+  $("#ud" + String(i)).css("display", "none");
+}
+
+function updateSelected() {
+  // lighten all
+  var i;
+  for (i = 0; i < numImages; i++) {
+    lightenThumb(i);
+  }
+
+  // darken selected
+  for (i = 0; i < selectionList.length; i++) {
+    darkenThumb(selectionList[i]);
+  }
+}
+
+$(".pick-design").click(function() {
+  // add design to picked list, pop off the previous third element (if there is one) from list, and update
+  // preventing event from being propagated to parents and children of class
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "pdx", where "x" is the pick number
+
+  while (selectionList.length >= maxSelected) {
+    selectionList.shift();
+  }
+
+  selectionList.push(currSelected);
+
+  updateSelected();
+});
+
+$(".unpick-design").click(function() {
+  // remove design from picked list, and update
+  // preventing event from being propagated to parents and children of class
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "udx", where "x" is the pick number
+  selectionList.splice(selectionList.indexOf(currSelected), 1);
+
+  updateSelected();
+});
+
+$(".evolve-arrow").click(function() {
+  // evolve picked designs!
+  // preventing event from being propagated to parents and children of class
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  var len = selectionList.length;
+  if (len === 0) {
+    return;
+  }
+
+  var mom, dad, momGene, dadGene, preserveList, i;
+  preserveList = R.zeros(numImages);
+
+  for (i = 0; i < len; i++) {
+    preserveList[selectionList[i]] = 1;
+  }
+
+  // mutate and evolve!
+  for (i = 0; i < numImages; i++) {
+    if (preserveList[i] === 0) {
+      mom = selectionList[R.randi(0, len)];
+      dad = selectionList[R.randi(0, len)];
+      momGene = genome[mom];
+      dadGene = genome[dad];
+
+      if (mom === dad) {
+        genome[i] = momGene.copy();
+      } else {
+        genome[i] = momGene.crossover(dadGene);
+      }
+
+      genome[i].mutateWeights();
+      if (Math.random() < 0.5) {
+        genome[i].addRandomNode();
+      }
+      if (Math.random() < 0.5) {
+        genome[i].addRandomConnection();
+      }
+
       genome[i].roundWeights();
       thumb[i] = NetArt.genGenomeImage(genome[i], thumbSize, thumbSize);
-    }
-  }
-
-  function maskThumb(i) {
-    ctxs[i].fillStyle="rgba(255, 255, 255, 0.7)";
-    ctxs[i].fillRect(borderWidth, borderWidth, thumbSize, thumbSize);
-  }
-
-  function drawThumb(i) {
-    ctxs[i].putImageData(thumb[i].getCanvasImage(ctxs[i]), thumbSize, thumbSize);
-  }
-
-  function drawAllThumb() {
-    var i;
-
-    for (i = 0; i < numImages; i++) {
-      ctxs[i].clearRect(0, 0, thumbSize + 2 * borderWidth, thumbSize + 2 * borderWidth);
       drawThumb(i);
     }
   }
 
-  function outlineThumb(i) {
-    // draws a white box around pic i
-    ctxs[i].beginPath();
-    ctxs[i].lineWidth = "1";
-    ctxs[i].strokeStyle = "#FFF";
-    ctxs[i].rect(0, 0, thumbSize + 2 * borderWidth, thumbSize + 2 * borderWidth);
-    ctxs[i].stroke();
-  }
+  // clear selection list
+  selectionList = [];
 
-  function outlineAll() {
-    var i;
-    for (i = 0; i < numImages; i++) {
-      outlineThumb(i);
-    }
-  }
+  // redraw selection boxes
+  updateSelected();
+});
 
-  function darkenThumb(i) {
-    // darkens a newly picked thumb, switches checkmark for x mark
-    $("#ov" + String(i)).style.opacity = .2;
-    $("#pd" + String(i)).style.display = "none";
-    $("#ud" + String(i)).style.display = "block";
-  }
+$(".save-design").click(function() {
+  // open prompt for user to input email
+  // preventing event from being propagated to parents and children of class
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 
-  function lightenThumb(i) {
-    // lightens a newly unpicked thumb, switches x mark for checkmark
-    $("#ov" + String(i)).style.opacity = 0;
-    $("#pd" + String(i)).style.display = "block";
-    $("#ud" + String(i)).style.display = "none";
-  }
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "sdx", where "x" is the pick number
+  $("#genome-data").css("value", String(genome[currSelected].toJSON()));
 
-  function updateSelected() {
-    // lighten all
-    var i;
-    for (i = 0; i < numImages; i++) {
-      lightenThumb(i);
-    }
+  $(".email-input").css("display", "block");
+});
 
-    // darken selected
-    for (i = 0; i < selectionList.length; i++) {
-      darkenThumb(selectionList[i]);
-    }
-  }
+$(".exit-email-input").click(function() {
+  // close prompt for user to input email
+  // preventing event from being propagated to parents and children of class
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 
-  $(".Pick Design").click(function(event) {
-    currSelected = parseInt((event.target.id).substring(2));  // clicked id is "pdx", where "x" is the pick number
-    var ix = selectionList.indexOf(currSelected);
-    lastSelected = currSelected;
+  $(".email-input").css("display", "none");
+});
 
-    if (ix === -1) {
-      while (selectionList.length >= maxSelected) {
-        selectionList.shift();
-      }
-
-      selectionList.push(currSelected);
-    } else {
-      selectionList.splice(ix, 1);
-    }
-
-    updateSelected();
+$(document).ready(function() {
+  $('#email-form').submit(function() {
+    $.post("https://aws-whatever.php", $(this).serialize());
   });
+});
 
-  $(".Evolve Arrow").click(function() {
-    var len = selectionList.length;
-    if (len === 0) {
-      return;
-    }
+initAll();
+initGenome();
+initThumb();
+drawAllThumb();
 
-    var mom, dad, momGene, dadGene, preserveList, i;
-    preserveList = R.zeros(numImages);
-
-    for (i = 0; i < len; i++) {
-      preserveList[selectionList[i]] = 1;
-    }
-
-    // mutate and evolve!
-    for (i = 0; i < numImages; i++) {
-      if (preserveList[i] === 0) {
-        mom = selectionList[R.randi(0, len)];
-        dad = selectionList[R.randi(0, len)];
-        momGene = genome[mom];
-        dadGene = genome[dad];
-
-        if (mom === dad) {
-          genome[i] = momGene.copy();
-        } else {
-          genome[i] = momGene.crossover(dadGene);
-        }
-
-        genome[i].mutateWeights();
-        if (Math.random() < 0.5) {
-          genome[i].addRandomNode();
-        }
-        if (Math.random() < 0.5) {
-          genome[i].addRandomConnection();
-        }
-
-        genome[i].roundWeights();
-        thumb[i] = NetArt.genGenomeImage(genome[i], thumbSize, thumbSize);
-        drawThumb(i);
-      }
-    }
-
-    // clear selection list
-    selectionList = [];
-
-    // redraw selection boxes
-    updateSelected();
-
-  });
-
-  function main() {
-    // start of the program
-    initAll();
-    initGenome();
-    initThumb();
-    drawAllThumb();
-  }
-
-  global.main = main;
-})(neurogram);
+// resize canvases dynamically
+window.onload = setCanvasSizes;
+window.onresize = setCanvasSizes;
 
 (function(lib) {
   "use strict";

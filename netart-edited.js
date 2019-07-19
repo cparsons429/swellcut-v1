@@ -8,7 +8,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this page.
 
-Copyright (C) 2015 david ha, otoro.net, otoro labs
+Copyright (C) 2019 Colin Parsons, Swellcut
 
 The JavaScript code in this page is free software: you can
 redistribute it and/or modify it under the terms of the GNU

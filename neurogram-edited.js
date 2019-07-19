@@ -9,7 +9,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this page.
 
-Copyright (C) 2015 david ha, otoro.net, otoro labs
+Copyright (C) 2019 Colin Parsons, Swellcut
 
 The JavaScript code in this page is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -263,8 +263,9 @@ $(".exit-email-input").click(function() {
 });
 
 $(document).ready(function() {
+  // send email and genome to php script for emailing when user completes form
   $('#email-form').submit(function() {
-    $.post("https://aws-whatever.php", $(this).serialize());
+    $.post("http://ec2-54-209-152-17.compute-1.amazonaws.com/designemailer.php", $(this).serialize());
   });
 });
 

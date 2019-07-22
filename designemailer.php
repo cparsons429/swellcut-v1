@@ -12,12 +12,12 @@
   // setup PHPMailer
   $mail = new PHPMailer;
 
-  $mail->IsSMTP();  // TODO: update all these SMTP details
+  $mail->IsSMTP();
   $mail->Host = 'email-smtp.us-east-1.amazonaws.com';
   $mail->Port = 587;
   $mail->SMTPAuth = true;
-  $mail->Username = 'AKIAJWD4TF2I2WR6ZLTQ';
-  $mail->Password = 'AoU60gYiP1RRZSSVfTc5pqlyzMEYPP+L7HovsbZhO7f/';
+  $mail->Username = 'AKIARL3JIGA4LJAOG67R';
+  $mail->Password = 'BOvboI8P6VdtMWmw6NUfeMwVFvZNwPv93R0DFVl9CCEJ';
   $mail->SMTPSecure = 'tls';
 
   // mail genome image to user
@@ -25,8 +25,8 @@
   $mail->FromName = 'Colin Parsons';
   $mail->AddAddress($_POST['email']);
   $mail->Subject = 'Here\'s your saved design!';
-  $mail->Body = "Hi,\r\n\r\nYour saved design is attached to this email. Thanks for using Swellcut!\r\n\r\nEnjoy,\r\n\r\nColin";
-  $mail->addAttachment('/tmp/image.jpg', 'new.jpg');  // TODO: convert image to png and send
+  $mail->Body = "Hi,\r\n\r\nYour saved design is attached to this email. Thanks for using Swellcut!\r\n\r\n-Colin";
+  $mail->addStringAttachment($_GET['img'], 'SwellcutDesign.png');
 
   $mail->Send();
 ?>

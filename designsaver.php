@@ -25,6 +25,9 @@
   <script src="https://colinparsons.me/swellcut/neat.graph.js"></script>
   <script src="https://colinparsons.me/swellcut/netart-edited.js"></script>
   <script type="text/javascript">
+    var fs = require("fs");
+    var functioning_shirt_mask_uri = fs.readFileSync("https://colinparsons.me/swellcut/functioning_shirt_mask_uri.txt");
+
     <?php
       echo sprintf("var genomeJSON = %s;", $_POST['genome-data']);
     ?>
@@ -37,10 +40,12 @@
     var canvas = document.getElementById('imagedrawer');
     var ctx = canvas.getContext('2d');
 
+    var img = new Image;
+    img.src = functioning_shirt_mask_uri;
     ctx.putImageData(thumb.getCanvasImage(ctx), 0, 0);
-    ctx.putImageData("path to shirt overlay", 0, 0);
+    ctx.drawImage(img, 0, 0);
 
-    window.location.href = "http://ec2-54-209-152-17.compute-1.amazonaws.com/designemailer.php?".(canvas.toDataURL());
+    window.location.href = "http://ec2-54-209-152-17.compute-1.amazonaws.com/designemailer.php?img=".(canvas.toDataURL());
   </script>
 </body>
 </html>

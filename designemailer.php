@@ -8,20 +8,6 @@
   require 'phpmailer/phpmailer/src/PHPMailer.php';
   require 'phpmailer/phpmailer/src/SMTP.php';
 
-  // save email and genome to our MariaDB SAVED_GENOMES -> emailed_genomes table
-  // setup db access
-  $host = 'localhost';
-  $user = 'phpaccess';
-  $pass = '49daysin7weeks=7^2';
-  $db = 'SAVED_GENOMES';
-  $mysqli = new mysqli($host, $user, $pass, $db);
-
-  // enter genome into db
-  $stmt = $mysqli->prepare("INSERT INTO emailed_genomes (email, genome_data) VALUES (?, ?)");
-  $stmt->bind_param("ss", $_POST['email'], $POST['genome-data']);
-  $stmt->execute();
-  $stmt->close();
-
   // mailing the genome image
   // setup PHPMailer
   $mail = new PHPMailer;

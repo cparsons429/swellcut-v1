@@ -1,51 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-  <?php
-    // save email and genome to our MariaDB SAVED_GENOMES -> emailed_genomes table
-    // setup db access
-    $host = 'localhost';
-    $user = 'phpaccess';
-    $pass = '49daysin7weeks=7^2';
-    $db = 'SAVED_GENOMES';
-    $mysqli = new mysqli($host, $user, $pass, $db);
+<?php
+  // gotta do this because composer is being a pain, so we need to specify the correct namespaces
+  use PHPMailer\PHPMailer\PHPMailer;
+  use PHPMailer\PHPMailer\Exception;
+  use PHPMailer\PHPMailer\SMTP;
 
-    // enter genome into db
-    $stmt = $mysqli->prepare("INSERT INTO emailed_genomes (email, genome_data) VALUES (?, ?)");
-    $stmt->bind_param("ss", $_POST['email'], $_POST['genome-data']);
-    $stmt->execute();
-    $stmt->close();
-  ?>
-  <canvas id = "imagedrawer" height="500" width="500"></canvas>
-  <!-- Our JavaScript -->
-  <script src="https://colinparsons.me/swellcut/recurrent.js"></script>
-  <script src="https://colinparsons.me/swellcut/neat.js"></script>
-  <script src="https://colinparsons.me/swellcut/neat.graph.js"></script>
-  <script src="https://colinparsons.me/swellcut/netart-edited.js"></script>
-  <script type="text/javascript">
-    var fs = require("fs");
-    var functioning_shirt_mask_uri = fs.readFileSync("https://colinparsons.me/swellcut/functioning_shirt_mask_uri.txt");
+  require 'PHPMailer-master/src/Exception.php';
+  require 'PHPMailer-master/src/PHPMailer.php';
+  require 'PHPMailer-master/src/SMTP.php';
 
-    <?php
-      echo sprintf("var genomeJSON = %s;", $_POST['genome-data']);
-    ?>
-    var genome = new N.Genome(genomeJSON);
-    genome.roundWeights();
+  // save email and genome to our MariaDB SAVED_GENOMES -> emailed_genomes table
+  // setup db access
+  $host = 'localhost';
+  $user = 'phpaccess';
+  $pass = '49daysin7weeks=7^2';
+  $db = 'SAVED_GENOMES';
+  $mysqli = new mysqli($host, $user, $pass, $db);
 
-    var thumbSize = 500;
-    var thumb = NetArt.genGenomeImage(genome, thumbSize, thumbSize);
+  // enter genome into db
+  $stmt = $mysqli->prepare("INSERT INTO emailed_genomes (email, genome_data) VALUES (?, ?)");
+  $stmt->bind_param("ss", $_POST['email'], $_POST['genome-data']);
+  $stmt->execute();
+  $stmt->close();
+  $mysqli->close();
 
-    var canvas = document.getElementById('imagedrawer');
-    var ctx = canvas.getContext('2d');
+  // getting the image in the correct format
+  $raw_img_str = $_POST['image-data'];
+  $img_str = substr($raw_img_str, strpos($raw_img_str, ","));
+  $filename = "SwellcutDesign.png";
+  $encoding = "base64";
+  $type = "image/png";
 
-    var img = new Image;
-    img.src = functioning_shirt_mask_uri;
-    ctx.putImageData(thumb.getCanvasImage(ctx), 0, 0);
-    ctx.drawImage(img, 0, 0);
+  // mailing the genome image
+  // setup PHPMailer
+  $mail = new PHPMailer;
 
-    window.location.href = "http://ec2-54-209-152-17.compute-1.amazonaws.com/designemailer.php?img=".(canvas.toDataURL());
-  </script>
-</body>
-</html>
+  $mail->IsSMTP();
+  $mail->Host = 'email-smtp.us-east-1.amazonaws.com';
+  $mail->Port = 587;
+  $mail->SMTPAuth = true;
+  $mail->Username = 'AKIARL3JIGA4LJAOG67R';
+  $mail->Password = 'BOvboI8P6VdtMWmw6NUfeMwVFvZNwPv93R0DFVl9CCEJ';
+  $mail->SMTPSecure = 'tls';
+
+  // mail genome image to user
+  $mail->From = 'cparsons@swellcut.com';
+  $mail->FromName = 'Colin Parsons';
+  $mail->AddAddress($_POST['email']);
+  $mail->Subject = 'Here\'s your saved design!';
+  $mail->Body = "Hi,\r\n\r\nYour saved design is attached to this email. Thanks for using Swellcut!\r\n\r\n-Colin";
+  $mail->addStringAttachment(base64_decode($img_str), $filename, $encoding, $type);
+  $mail->Send();
+?>

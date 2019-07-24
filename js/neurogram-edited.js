@@ -33,7 +33,7 @@ for the JavaScript code in this page.
 var neurogram = {};
 
 var numImages = 12;
-var thumbSize = 270;
+var thumbSize = 320;
 var maxSelected = 3;  // we can only evolve max of 3 genomes
 
 var genome = [];  // array of genomes
@@ -120,14 +120,19 @@ function maskThumb(i) {
 }
 
 function drawThumb(i) {
-  ctxs[i].putImageData(thumb[i].getCanvasImage(ctxs[i]), 0, 0);
+  var shirtMask = document.getElementById("shirtmask");
+  var genImg = thumb[i].getCanvasImage(ctxs[i]);
+
+  ctxs[i].clearRect(0, 0, thumbSize, thumbSize);
+  ctxs[i].putImageData(genImg, 0, 0);
+  ctxs[i].globalCompositeOperation = "source-over";
+  ctxs[i].drawImage(shirtMask, 0, 0, canvases[i].width, canvases[i].height);
 }
 
 function drawAllThumb() {
   var i;
 
   for (i = 0; i < numImages; i++) {
-    ctxs[i].clearRect(0, 0, thumbSize, thumbSize);
     drawThumb(i);
   }
 }
@@ -248,7 +253,8 @@ $(".save-design").click(function() {
   event.stopImmediatePropagation();
 
   currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "sdx", where "x" is the pick number
-  $("#genome-data").css("value", String(genome[currSelected].toJSON()));
+  $("#genome-data").val(JSON.stringify(genome[currSelected].toJSON()));
+  $("#image-data").val(String(canvases[currSelected].toDataURL()));
 
   $(".email-input").css("display", "block");
 });
@@ -259,14 +265,11 @@ $(".exit-email-input").click(function() {
   event.stopPropagation();
   event.stopImmediatePropagation();
 
-  $(".email-input").css("display", "none");
-});
+  // so the user can request a new image be sent
+  $("#email-form").css("display", "block");
+  $("#email-success").css("display", "none");
 
-$(document).ready(function() {
-  // send email and genome to php script for emailing when user completes form
-  $('#email-form').submit(function() {
-    $.post("http://ec2-54-209-152-17.compute-1.amazonaws.com/designemailer.php", $(this).serialize());
-  });
+  $(".email-input").css("display", "none");
 });
 
 initAll();
@@ -287,3 +290,20 @@ window.onresize = setCanvasSizes;
     module.exports = lib;  // in nodejs
   }
 })(neurogram);
+
+var Webflow = Webflow || [];
+Webflow.push(function() {
+
+  // === Custom Form Handling ===
+
+  // unbind webflow form handling
+  $(document).off('submit');
+
+  // new form handling
+  $('#email-form').submit(function(evt) {
+    $.post("https://www.swellcut.com/designsaver.php", $("#email-form").serialize());
+  	$("#email-form").css("display", "none");
+    $("#email-success").css("display", "block");
+    return false;
+  });
+});

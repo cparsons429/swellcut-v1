@@ -32,7 +32,7 @@ for the JavaScript code in this page.
 // neural network random art generator
 if (typeof module != "undefined") {
   var R = require('./recurrent.js');
-  var convnetjs = require('https://colinparsons.me/swellcut/convnet.js');
+  var convnetjs = require('./convnet.js');
   var N = require('./neat.js');
 }
 

@@ -8,7 +8,7 @@
   require 'PHPMailer-master/src/PHPMailer.php';
   require 'PHPMailer-master/src/SMTP.php';
 
-  // save email and genome to our MariaDB SAVED_GENOMES -> emailed_genomes table
+  // save email and genome to our MariaDB SAVED_GENOMES database
   // setup db access
   $host = 'localhost';
   $user = 'phpaccess';
@@ -16,9 +16,52 @@
   $db = 'SAVED_GENOMES';
   $mysqli = new mysqli($host, $user, $pass, $db);
 
-  // enter genome into db
-  $stmt = $mysqli->prepare("INSERT INTO emailed_genomes (email, genome_data) VALUES (?, ?)");
-  $stmt->bind_param("ss", $_POST['email'], $_POST['genome-data']);
+  // getting email id, and saving email if not already saved
+  // if already saved, get email id from db
+  $stmt = $mysqli->prepare("SELECT COUNT(*), id FROM emails WHERE email=?");
+  $stmt->bind_param("s", $_POST['email']);
+  $stmt->execute();
+  $stmt->bind_result($count_str, $e_id_str);
+  $stmt->fetch();
+  $stmt->close();
+
+  // if not already saved, save email, then get email id
+  if (intval($count_str) == 0) {
+    // save email
+    $stmt = $mysqli->prepare("INSERT INTO emails (email) VALUES (?)");
+    $stmt->bind_param("s", $_POST['email']);
+    $stmt->execute();
+    $stmt->close();
+
+    // get email id
+    $stmt = $mysqli->prepare("SELECT LAST_INSERT_ID()");
+    $stmt->execute();
+    $stmt->bind_result($e_id_str);
+    $stmt->fetch();
+    $stmt->close();
+  }
+
+  $e_id = intval($e_id_str);
+
+  // saving genome and getting genome id
+  // saving genome
+  $stmt = $mysqli->prepare("INSERT INTO genome_values (creator_email_id, genome_data) VALUES (?, ?)");
+  $stmt->bind_param("is", $e_id, $_POST['genome-data']);
+  $stmt->execute();
+  $stmt->close();
+
+  // getting just-saved genome's id
+  $stmt = $mysqli->prepare("SELECT LAST_INSERT_ID()");
+  $stmt->execute();
+  $stmt->bind_result($g_id_str);
+  $stmt->fetch();
+  $stmt->close();
+
+  $g_id = intval($g_id_str);
+
+  // entering a record of the email sent into db
+  $stmt = $mysqli->prepare("INSERT INTO emailed_genomes (receiver_email_id, genome_id) VALUES (?, ?)");
+  $stmt->bind_param("ii", $e_id, $g_id);
   $stmt->execute();
   $stmt->close();
   $mysqli->close();

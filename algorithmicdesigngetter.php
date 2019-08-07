@@ -43,22 +43,24 @@
     $stmt = $mysqli->prepare("SELECT genome_id FROM emailed_genomes WHERE id=?");
     $stmt->bind_param("i", $e_ids[$i]);
     $stmt->execute();
-    $stmt->bind_result($g_id);
+    $stmt->bind_result($g_id_str);
     $stmt->fetch();
     $stmt->close();
 
+    $g_id = intval($g_id_str);
+
     // (2)
     $stmt = $mysqli->prepare("SELECT genome_data FROM genome_values WHERE id=?");
-    $stmt->bind_param("i", intval($g_id));
+    $stmt->bind_param("i", $g_id);
     $stmt->execute();
     $stmt->bind_result($g_data);
     $stmt->fetch();
     $stmt->close();
 
     // (3)
-    $return_data += $g_data + ";";
+    $return_data .= $g_id_str.";".$g_data.";";
   }
 
   // return genome data
-  return $return_data;
+  echo $return_data;
 ?>

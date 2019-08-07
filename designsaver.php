@@ -43,21 +43,26 @@
 
   $e_id = intval($e_id_str);
 
-  // saving genome and getting genome id
-  // saving genome
-  $stmt = $mysqli->prepare("INSERT INTO genome_values (creator_email_id, genome_data) VALUES (?, ?)");
-  $stmt->bind_param("is", $e_id, $_POST['genome-data']);
-  $stmt->execute();
-  $stmt->close();
+  if (isset($_POST['genome-data'])) {
+    // this is a new genome to save to the database
+    // saving genome
+    $stmt = $mysqli->prepare("INSERT INTO genome_values (creator_email_id, genome_data) VALUES (?, ?)");
+    $stmt->bind_param("is", $e_id, $_POST['genome-data']);
+    $stmt->execute();
+    $stmt->close();
 
-  // getting just-saved genome's id
-  $stmt = $mysqli->prepare("SELECT LAST_INSERT_ID()");
-  $stmt->execute();
-  $stmt->bind_result($g_id_str);
-  $stmt->fetch();
-  $stmt->close();
+    // getting just-saved genome's id
+    $stmt = $mysqli->prepare("SELECT LAST_INSERT_ID()");
+    $stmt->execute();
+    $stmt->bind_result($g_id_str);
+    $stmt->fetch();
+    $stmt->close();
 
-  $g_id = intval($g_id_str);
+    $g_id = intval($g_id_str);
+  } else {
+    // this is a genome that already exists in the database
+    $g_id = intval($_POST['genome-id']);
+  }
 
   // entering a record of the email sent into db
   $stmt = $mysqli->prepare("INSERT INTO emailed_genomes (receiver_email_id, genome_id) VALUES (?, ?)");

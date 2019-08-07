@@ -8,15 +8,18 @@
 
   // get genome data from db
   $stmt = $mysqli->prepare("SELECT genome_data FROM genome_values WHERE id=?");
-  $stmt->bind_param("i", intval($_POST['genome_id']);
+  $stmt->bind_param("i", intval($_POST['genome_id']));
   $stmt->execute();
   $stmt->bind_result($g_data);
   $stmt->fetch();
   $stmt->close();
 
+  $mysqli->close();
+
   // return genome data
   if ($g_data == "") {
-    return "undef";
+    echo "undef";
+  } else {
+    echo $g_data;
   }
-  return $g_data;
 ?>

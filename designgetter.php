@@ -1,25 +1,31 @@
 <?php
-  // setup db access
-  $host = 'localhost';
-  $user = 'phpaccess';
-  $pass = '49daysin7weeks=7^2';
-  $db = 'SAVED_GENOMES';
-  $mysqli = new mysqli($host, $user, $pass, $db);
+  if (ctype_digit($_POST['genome_id'])) {
+    // passed string is a valid integer
+    // setup db access
+    $host = 'localhost';
+    $user = 'phpaccess';
+    $pass = '49daysin7weeks=7^2';
+    $db = 'SAVED_GENOMES';
+    $mysqli = new mysqli($host, $user, $pass, $db);
 
-  // get genome data from db
-  $stmt = $mysqli->prepare("SELECT genome_data FROM genome_values WHERE id=?");
-  $stmt->bind_param("i", intval($_POST['genome_id']));
-  $stmt->execute();
-  $stmt->bind_result($g_data);
-  $stmt->fetch();
-  $stmt->close();
+    // get genome data from db
+    $stmt = $mysqli->prepare("SELECT genome_data FROM genome_values WHERE id=?");
+    $stmt->bind_param("i", intval($_POST['genome_id']));
+    $stmt->execute();
+    $stmt->bind_result($g_data);
+    $stmt->fetch();
+    $stmt->close();
 
-  $mysqli->close();
+    $mysqli->close();
 
-  // return genome data
-  if ($g_data == "") {
-    echo "undef";
+    // return genome data
+    if ($g_data == "") {
+      echo "undef";
+    } else {
+      echo $g_data;
+    }
   } else {
-    echo $g_data;
+    // passed string is not a valid integer
+    echo "undef";
   }
 ?>

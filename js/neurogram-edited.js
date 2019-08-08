@@ -290,6 +290,62 @@ $(".modify-design").click(function() {
   window.location.assign("https://www.swellcut.com/design.html?gid=" + genomeIDs[currSelected]);
 });
 
+$(".instagram-logo").click(function() {
+  // TODO post to instagram
+  // for now, just open email prompt
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "igx", where "x" is the pick number
+
+  $("#genome-id").val(genomeIDs[currSelected]);  // we're emailing a previously saved genome
+  $("#image-data").val(String(canvases[currSelected].toDataURL()));
+
+  $(".email-input").css("display", "block");
+});
+
+$(".facebook-logo").click(function() {
+  // TODO post to facebook
+  // for now, just open email prompt
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "igx", where "x" is the pick number
+
+  $("#genome-id").val(genomeIDs[currSelected]);  // we're emailing a previously saved genome
+  $("#image-data").val(String(canvases[currSelected].toDataURL()));
+
+  $(".email-input").css("display", "block");
+});
+
+$(".twitter-logo").click(function() {
+  // TODO post to twitter
+  // for now, just open email prompt
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "igx", where "x" is the pick number
+
+  $("#genome-id").val(genomeIDs[currSelected]);  // we're emailing a previously saved genome
+  $("#image-data").val(String(canvases[currSelected].toDataURL()));
+
+  $(".email-input").css("display", "block");
+});
+
+$(".add-to-cart-icon").click(function() {
+  // TODO add to cart
+  // for now, just open email prompt
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  currSelected = parseInt($(this).attr("id").substring(2));  // clicked id is "igx", where "x" is the pick number
+
+  $("#genome-id").val(genomeIDs[currSelected]);  // we're emailing a previously saved genome
+  $("#image-data").val(String(canvases[currSelected].toDataURL()));
+
+  $(".email-input").css("display", "block");
+});
+
 $(".exit-email-input").click(function() {
   // close prompt for user to input email
   // preventing event from being propagated to parents and children of class
@@ -311,36 +367,29 @@ if (windowLocation.indexOf("www.swellcut.com/design.html") != -1) {
   var queryURL = "www.swellcut.com/design.html?gid=";
   genomeID = windowLocation.substring(windowLocation.indexOf(queryURL) + queryURL.length);
 
-  if(!isNaN(parseInt(genomeID))){
+  $.post("https://www.swellcut.com/designgetter.php", {genome_id: genomeID}, function(data) {
     // if the queried genome exists in the database, populate design blocks with its children
-    $.post("https://www.swellcut.com/designgetter.php", {genome_id: genomeID}, function(data) {
-      // creates our genomes and thumbs from a parent genome (if it exists)
-      if (data === "undef") {
-        // if the queried genome doesn't exist in the database, we're fine with randomly initialized design blocks
-        initGenome();
-        initThumb();
-        drawAllThumb();
-      } else {
-        // if the queried genome exists in the database, populate design blocks with its children
-        for (i = 0; i < numImages; i++) {
-          genome[i] = new N.Genome();
-        }
-
-        genome[0].fromJSON(JSON.parse(data));
-        thumb[0] = NetArt.genGenomeImage(genome[0], thumbSize, thumbSize);
-        drawThumb(0);
-
-        // populate all genomes with children of the provided parent
-        selectionList[0] = 0;
-        evolveDesigns();
+    // creates our genomes and thumbs from a parent genome (if it exists)
+    if (data === "undef") {
+      // if the queried genome doesn't exist in the database, we're fine with randomly initialized design blocks
+      initGenome();
+      initThumb();
+      drawAllThumb();
+    } else {
+      // if the queried genome exists in the database, populate design blocks with its children
+      for (i = 0; i < numImages; i++) {
+        genome[i] = new N.Genome();
       }
-    });
-  } else {
-    // if the queried genome doesn't exist in the database, we're fine with randomly initialized design blocks
-    initGenome();
-    initThumb();
-    drawAllThumb();
-  }
+
+      genome[0].fromJSON(JSON.parse(data));
+      thumb[0] = NetArt.genGenomeImage(genome[0], thumbSize, thumbSize);
+      drawThumb(0);
+
+      // populate all genomes with children of the provided parent
+      selectionList[0] = 0;
+      evolveDesigns();
+    }
+  });
 } else {
   // neurogram is being accessed by our discover or favorites pages
   // populate discover/favorite blocks via our selection algorithm

@@ -361,10 +361,10 @@ $(".exit-email-input").click(function() {
 
 initAll();
 
-if (windowLocation.indexOf("www.swellcut.com/design.html") != -1) {
+if (windowLocation.indexOf("www.swellcut.com/design") != -1) {
   // neurogram is being accessed by our design page
   // get the queried genome id, if it exists
-  var queryURL = "www.swellcut.com/design.html?gid=";
+  var queryURL = "www.swellcut.com/design?gid=";
   genomeID = windowLocation.substring(windowLocation.indexOf(queryURL) + queryURL.length);
 
   $.post("https://www.swellcut.com/designgetter.php", {genome_id: genomeID}, function(data) {
